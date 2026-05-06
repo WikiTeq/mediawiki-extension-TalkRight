@@ -4,40 +4,63 @@
  * @author Marc Noirot - marc dot noirot at gmail
  * @author P.Levêque - User:Phillev
  * @author James Montalvo - User:Jamesmontalvo3
- *
- *
-*/
+ */
+
+use MediaWiki\MediaWikiServices;
+use MediaWiki\User\UserIdentity;
+
 class TalkRight {
 
-    /**
-     * Bypass edit restriction when EDITING pages if user has 'talk' right and page is a talk (discussion) page.
-     * @param $&editPage the page edition object
-     * @return true to resume edition to normal operation
-     */
-    static function alternateEdit( $editPage ) {
-        global $wgOut, $wgUser, $wgRequest, $wgTitle;
-        if ( $wgTitle->isTalkPage() && $wgUser->isAllowed( 'talk' ) ) {
-            array_push( $wgUser->mRights, 'edit' );
-        }
-        return true;
-    }
+	/** @var bool Guard against re-entrancy when resolving rights */
+	private static $inUserGetRights = false;
 
-    /**
-     * Bypass edit restriction when VIEWING pages if user has 'talk' right and page is a talk (discussion) page.
-	 * This is probably not the ideal hook to use. I just needed one earlier than creation of section links, edit tab and add topic tab
-     * @param &$parser parser object, used to gain access to User and Title objects
-	 * @param &$text unused
-	 * @param &$strip_state unused
-     * @return true and false both seemed to work. [[Manual:Hooks/ParserBeforeStrip]] doesn't indicate what return value affects
-     */    
-    static function giveEditRightsWhenViewingTalkPages ( &$parser, &$test1, &$test2 ) {
-        
-        $user = $parser->getUser();
-        if ( $parser->getTitle()->isTalkPage() && $user->isAllowed( 'talk' ) ) {
-            array_push( $user->mRights, 'edit' );            
-        }
-        
-        return true;
-    }
-    
+	/**
+	 * Grant "edit" on talk pages when the user may use the "talk" right.
+	 * Replaces legacy hacks on User::$mRights / ParserBeforeStrip, which break on MediaWiki 1.36+
+	 * (Parser::getUser removed; User::$mRights is not a mutable list in 1.43).
+	 *
+	 * @param UserIdentity $user
+	 * @param string[] &$rights
+	 */
+	public static function onUserGetRights( UserIdentity $user, array &$rights ) {
+		if ( self::$inUserGetRights ) {
+			return;
+		}
+
+		$title = \RequestContext::getMain()->getTitle();
+		if ( !$title || !$title->isTalkPage() ) {
+			return;
+		}
+
+		$hasTalk = in_array( 'talk', $rights, true );
+		if ( !$hasTalk ) {
+			self::$inUserGetRights = true;
+			try {
+				$hasTalk = MediaWikiServices::getInstance()->getPermissionManager()->userHasRight(
+					$user,
+					'talk'
+				);
+			} finally {
+				self::$inUserGetRights = false;
+			}
+		}
+
+		if ( $hasTalk && !in_array( 'edit', $rights, true ) ) {
+			$rights[] = 'edit';
+		}
+	}
+
+	/**
+	 * @deprecated Kept for backwards compatibility if something still references the old hook name.
+	 */
+	public static function alternateEdit( $editPage ) {
+		return true;
+	}
+
+	/**
+	 * @deprecated Kept for backwards compatibility if something still references the old hook name.
+	 */
+	public static function giveEditRightsWhenViewingTalkPages( &$parser, &$test1, &$test2 ) {
+		return true;
+	}
 }

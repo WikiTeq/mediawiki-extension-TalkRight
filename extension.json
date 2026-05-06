@@ -16,11 +16,8 @@
 		"TalkRight": "TalkRight.class.php"
 	},
 	"Hooks": {
-		"AlternateEdit": [
-			"TalkRight::alternateEdit"
-		],
-		"ParserBeforeStrip": [
-			"TalkRight::giveEditRightsWhenViewingTalkPages"
+		"UserGetRights": [
+			"TalkRight::onUserGetRights"
 		]
 	},
 	"manifest_version": 1
