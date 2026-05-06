@@ -2,7 +2,7 @@
 /**
  * Main class for the Talkright MediaWiki extension
  * @author Marc Noirot - marc dot noirot at gmail
- * @author P.Levùque - User:Phillev
+ * @author P.Lev√™que - User:Phillev
  * @author James Montalvo - User:Jamesmontalvo3
  */
 
