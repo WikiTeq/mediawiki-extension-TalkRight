@@ -1,12 +1,12 @@
 {
 	"name": "TalkRight",
-	"version": "2.0.0",
+	"version": "2.1.0",
 	"author": [
 		"P.Leveque",
 		"Marc Noirot",
 		"James Montalvo"
 	],
-	"url": "http://www.mediawiki.org/wiki/Extension:Talkright",
+	"url": "https://www.mediawiki.org/wiki/Extension:TalkRight",
 	"descriptionmsg": "talkright-desc",
 	"type": "other",
 	"AvailableRights": [
@@ -16,11 +16,8 @@
 		"TalkRight": "TalkRight.class.php"
 	},
 	"Hooks": {
-		"AlternateEdit": [
-			"TalkRight::alternateEdit"
-		],
-		"ParserBeforeStrip": [
-			"TalkRight::giveEditRightsWhenViewingTalkPages"
+		"TitleQuickPermissions": [
+			"TalkRight::onTitleQuickPermissions"
 		]
 	},
 	"manifest_version": 1
